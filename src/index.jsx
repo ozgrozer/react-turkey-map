@@ -32,6 +32,11 @@ const App = () => {
     }
   }
 
+  const colorData = {
+    '07': 'red',
+    '06': 'green'
+  }
+
   return (
     <div>
       <div
@@ -62,7 +67,11 @@ const App = () => {
                     data-city={city.city}
                     data-plate={city.plate}
                   >
-                    <path d={city.draw} />
+                    {
+                      colorData[city.plate]
+                        ? <path d={city.draw} style={{ fill: colorData[city.plate] }} />
+                        : <path d={city.draw} />
+                    }
                   </g>
                 )
               })
