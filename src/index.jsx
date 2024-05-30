@@ -10,8 +10,8 @@ const App = () => {
 
   const handleMouseOver = (event) => {
     if (event.target.tagName === 'path') {
-      const name = event.target.parentNode.getAttribute('data-name')
-      setTooltip((<div>{name}</div>))
+      const city = event.target.parentNode.getAttribute('data-city')
+      setTooltip((<div>{city}</div>))
     }
   }
 
@@ -26,9 +26,9 @@ const App = () => {
   const handleClick = (event) => {
     if (event.target.tagName === 'path') {
       const parent = event.target.parentNode
-      const name = parent.getAttribute('data-name')
+      const city = parent.getAttribute('data-city')
       const plate = parent.getAttribute('data-plate')
-      console.log({ name, plate })
+      console.log({ city, plate })
     }
   }
 
@@ -59,7 +59,7 @@ const App = () => {
                   <g
                     key={key}
                     id={city.plate}
-                    data-name={city.name}
+                    data-city={city.city}
                     data-plate={city.plate}
                   >
                     <path d={city.draw} />
