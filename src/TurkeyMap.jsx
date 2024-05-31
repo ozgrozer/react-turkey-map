@@ -3,7 +3,7 @@ import { useState } from 'react'
 import cities from './cities'
 import style from './style.module.scss'
 
-export default () => {
+export default ({ colorData }) => {
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
 
@@ -29,11 +29,6 @@ export default () => {
       const plate = parent.getAttribute('data-plate')
       console.log({ city, plate })
     }
-  }
-
-  const colorData = {
-    '07': 'red',
-    '06': 'green'
   }
 
   return (
