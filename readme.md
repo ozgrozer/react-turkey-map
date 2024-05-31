@@ -16,16 +16,12 @@ $ npm install react-turkey-map
 ## Usage
 ```jsx
 import TurkeyMap from 'react-turkey-map'
-import { createRoot } from 'react-dom/client'
 
-const App = () => {
+export default () => {
   return (
     <TurkeyMap />
   )
 }
-
-createRoot(document.getElementById('app'))
-  .render(<App />)
 ```
 
 ## Contribution
