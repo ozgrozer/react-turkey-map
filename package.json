@@ -14,8 +14,8 @@
     "url": "https://github.com/ozgrozer/react-turkey-map.git"
   },
   "scripts": {
-    "dev": "parcel ./src/index.html --dist-dir ./dist --public-url /",
-    "build": "parcel build ./src/index.html --dist-dir ./dist --public-url / --no-source-maps"
+    "dev": "parcel ./example/index.html --dist-dir ./dist --public-url /",
+    "build": "rm -rf build && NODE_ENV=production babel src --out-dir build --copy-files"
   },
   "dependencies": {
     "parcel": "^2.12.0",
