@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client'
 
-import TurkeyMap from './../src/TurkeyMap'
+import './../build/style.css'
+import TurkeyMap from './../build/TurkeyMap'
+// import TurkeyMap from './../src/TurkeyMap'
 
 const App = () => {
   return (
