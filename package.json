@@ -17,7 +17,7 @@
     "dev": "parcel ./example/index.html --dist-dir ./dist --public-url /",
     "build": "npm run build1 && npm run build2 && npm run build3",
     "build1": "rm -rf build && NODE_ENV=production babel src --out-dir build --copy-files",
-    "build2": "sass ./src/style.module.scss ./build/style.css",
+    "build2": "sass --no-source-map ./src/style.module.scss ./build/style.css",
     "build3": "rm ./build/style.module.scss"
   },
   "dependencies": {
