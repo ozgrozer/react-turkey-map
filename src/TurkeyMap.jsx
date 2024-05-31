@@ -3,7 +3,9 @@ import React, { useState } from 'react'
 import './style.scss'
 import cities from './cities'
 
-export default ({ colorData }) => {
+export default ({ colorData: _colorData }) => {
+  const colorData = _colorData || {}
+
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
 
