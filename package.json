@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
@@ -22,7 +22,6 @@
     "build4": "rm ./build/style.scss"
   },
   "dependencies": {
-    "parcel": "^2.12.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -34,6 +33,7 @@
     "@babel/preset-env": "^7.24.6",
     "@babel/preset-react": "^7.24.6",
     "@parcel/transformer-sass": "^2.12.0",
+    "parcel": "^2.12.0",
     "process": "^0.11.10",
     "sass": "^1.77.4",
     "standard": "^17.1.0"
