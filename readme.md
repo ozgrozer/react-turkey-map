@@ -1,6 +1,6 @@
 # react-turkey-map
 
-Custom Turkey Map
+Customizable Turkey map
 
 [![npm](https://img.shields.io/npm/v/react-turkey-map.svg?style=flat-square)](https://www.npmjs.com/package/react-turkey-map)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ozgrozer/react-turkey-map/blob/master/license)
