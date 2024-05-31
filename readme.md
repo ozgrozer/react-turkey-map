@@ -3,7 +3,7 @@
 Customizable Turkey map
 
 [![npm](https://img.shields.io/npm/v/react-turkey-map.svg?style=flat-square)](https://www.npmjs.com/package/react-turkey-map)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ozgrozer/react-turkey-map/blob/master/license)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ozgrozer/react-turkey-map/blob/main/license)
 
 [Demo](https://stackblitz.com/edit/react-turkey-map?file=src%2FApp.jsx)
 
@@ -32,4 +32,4 @@ Feel free to contribute. Open a new [issue](https://github.com/ozgrozer/react-tu
 
 ## License
 
-[MIT](https://github.com/ozgrozer/react-turkey-map/blob/master/license)
+[MIT](https://github.com/ozgrozer/react-turkey-map/blob/main/license)
