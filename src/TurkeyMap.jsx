@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
-import { createRoot } from 'react-dom/client'
+import { useState } from 'react'
 
 import cities from './cities'
 import style from './style.module.scss'
 
-const App = () => {
+export default () => {
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
 
@@ -82,6 +81,3 @@ const App = () => {
     </div>
   )
 }
-
-createRoot(document.getElementById('app'))
-  .render(<App />)
