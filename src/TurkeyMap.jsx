@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
+import './style.scss'
 import cities from './cities'
-import style from './style.module.scss'
 
 export default ({ colorData }) => {
   const [tooltip, setTooltip] = useState('')
@@ -34,17 +34,17 @@ export default ({ colorData }) => {
   return (
     <div>
       <div
-        className={style.tooltip}
+        className='tooltip'
         style={{ top: position.top, left: position.left }}
       >
         {tooltip}
       </div>
 
-      <div className={style.turkeyMapWrapper}>
+      <div className='turkeyMapWrapper'>
         <svg
           version='1.1'
+          className='turkeyMap'
           onClick={handleClick}
-          className={style.turkeyMap}
           onMouseOut={handleMouseOut}
           onMouseOver={handleMouseOver}
           onMouseMove={handleMouseMove}
