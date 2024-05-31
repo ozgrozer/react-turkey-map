@@ -5,8 +5,15 @@ import TurkeyMap from './../build/TurkeyMap'
 // import TurkeyMap from './../src/TurkeyMap'
 
 const App = () => {
+  const colorData = {
+    '07': 'red',
+    '06': 'green'
+  }
+
   return (
-    <TurkeyMap />
+    <TurkeyMap
+      colorData={colorData}
+    />
   )
 }
 
