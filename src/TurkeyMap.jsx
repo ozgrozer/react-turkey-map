@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
-import './style.scss'
 import cities from './cities'
+import styles from './styles'
 
 export default ({ colorData: _colorData }) => {
   const colorData = _colorData || {}
@@ -12,7 +12,7 @@ export default ({ colorData: _colorData }) => {
   const handleMouseOver = (event) => {
     if (event.target.tagName === 'path') {
       const city = event.target.parentNode.getAttribute('data-city')
-      setTooltip((<div>{city}</div>))
+      setTooltip((<div style={styles.tooltipContent}>{city}</div>))
     }
   }
 
@@ -35,19 +35,16 @@ export default ({ colorData: _colorData }) => {
 
   return (
     <div>
-      <div
-        className='tooltip'
-        style={{ top: position.top, left: position.left }}
-      >
+      <div style={{ ...styles.tooltip, top: position.top, left: position.left }}>
         {tooltip}
       </div>
 
-      <div className='turkeyMapWrapper'>
+      <div style={styles.turkeyMapWrapper}>
         <svg
           version='1.1'
-          className='turkeyMap'
           onClick={handleClick}
           onMouseOut={handleMouseOut}
+          style={styles.turkeyMap}
           onMouseOver={handleMouseOver}
           onMouseMove={handleMouseMove}
           viewBox='0 0 1007.478 527.323'
@@ -65,8 +62,18 @@ export default ({ colorData: _colorData }) => {
                   >
                     {
                       colorData[city.plate]
-                        ? <path d={city.draw} style={{ fill: colorData[city.plate] }} />
-                        : <path d={city.draw} />
+                        ? (
+                          <path
+                            d={city.draw}
+                            style={{ ...styles.path, fill: colorData[city.plate] }}
+                          />
+                          )
+                        : (
+                          <path
+                            d={city.draw}
+                            style={styles.path}
+                          />
+                          )
                     }
                   </g>
                 )
