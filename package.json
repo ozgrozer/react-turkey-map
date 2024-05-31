@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
@@ -21,7 +21,7 @@
     "build3": "sass --no-source-map ./src/style.scss ./build/style.css",
     "build4": "rm ./build/style.scss"
   },
-  "dependencies": {
+  "peerDependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
