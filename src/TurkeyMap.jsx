@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 import cities from './cities'
 import style from './style.module.scss'

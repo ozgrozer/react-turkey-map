@@ -1,13 +1,16 @@
 "use strict";
 
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports["default"] = void 0;
-var _react = require("react");
+var _react = _interopRequireWildcard(require("react"));
 var _cities = _interopRequireDefault(require("./cities"));
 var _styleModule = _interopRequireDefault(require("./style.css"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { "default": e }; }
+function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
+function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != _typeof(e) && "function" != typeof e) return { "default": e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n["default"] = e, t && t.set(e, n), n; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -30,7 +33,7 @@ var _default = exports["default"] = function _default(_ref) {
   var handleMouseOver = function handleMouseOver(event) {
     if (event.target.tagName === 'path') {
       var city = event.target.parentNode.getAttribute('data-city');
-      setTooltip( /*#__PURE__*/React.createElement("div", null, city));
+      setTooltip( /*#__PURE__*/_react["default"].createElement("div", null, city));
     }
   };
   var handleMouseMove = function handleMouseMove(event) {
@@ -53,15 +56,15 @@ var _default = exports["default"] = function _default(_ref) {
       });
     }
   };
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/_react["default"].createElement("div", null, /*#__PURE__*/_react["default"].createElement("div", {
     className: _styleModule["default"].tooltip,
     style: {
       top: position.top,
       left: position.left
     }
-  }, tooltip), /*#__PURE__*/React.createElement("div", {
+  }, tooltip), /*#__PURE__*/_react["default"].createElement("div", {
     className: _styleModule["default"].turkeyMapWrapper
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, /*#__PURE__*/_react["default"].createElement("svg", {
     version: "1.1",
     onClick: handleClick,
     className: _styleModule["default"].turkeyMap,
@@ -70,20 +73,20 @@ var _default = exports["default"] = function _default(_ref) {
     onMouseMove: handleMouseMove,
     viewBox: "0 0 1007.478 527.323",
     xmlns: "http://www.w3.org/2000/svg"
-  }, /*#__PURE__*/React.createElement("g", {
+  }, /*#__PURE__*/_react["default"].createElement("g", {
     id: "turkiye"
   }, _cities["default"].map(function (city, key) {
-    return /*#__PURE__*/React.createElement("g", {
+    return /*#__PURE__*/_react["default"].createElement("g", {
       key: key,
       id: city.plate,
       "data-city": city.city,
       "data-plate": city.plate
-    }, colorData[city.plate] ? /*#__PURE__*/React.createElement("path", {
+    }, colorData[city.plate] ? /*#__PURE__*/_react["default"].createElement("path", {
       d: city.draw,
       style: {
         fill: colorData[city.plate]
       }
-    }) : /*#__PURE__*/React.createElement("path", {
+    }) : /*#__PURE__*/_react["default"].createElement("path", {
       d: city.draw
     }));
   })))));
