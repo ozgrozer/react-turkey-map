@@ -43,5 +43,16 @@
       "@babel/env",
       "@babel/preset-react"
     ]
-  }
+  },
+  "keywords": [
+    "map",
+    "react",
+    "harita",
+    "turkey",
+    "turkiye",
+    "turkey-map",
+    "turkiye-haritasi",
+    "react-turkey-map",
+    "react-turkiye-haritasi"
+  ]
 }
