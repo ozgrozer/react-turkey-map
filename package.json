@@ -1,6 +1,12 @@
 {
   "license": "MIT",
-  "name": "react-turkiye-haritasi",
+  "version": "1.0.0",
+  "name": "react-turkey-map",
+  "author": {
+    "name": "Ozgur Ozer",
+    "email": "ozgr@live.com",
+    "url": "https://github.com/ozgrozer"
+  },
   "scripts": {
     "dev": "parcel ./src/index.html --dist-dir ./dist --public-url /",
     "build": "parcel build ./src/index.html --dist-dir ./dist --public-url / --no-source-maps"
