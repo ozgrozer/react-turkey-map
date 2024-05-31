@@ -14,7 +14,8 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-var _default = exports["default"] = function _default() {
+var _default = exports["default"] = function _default(_ref) {
+  var colorData = _ref.colorData;
   var _useState = (0, _react.useState)(''),
     _useState2 = _slicedToArray(_useState, 2),
     tooltip = _useState2[0],
@@ -51,10 +52,6 @@ var _default = exports["default"] = function _default() {
         plate: plate
       });
     }
-  };
-  var colorData = {
-    '07': 'red',
-    '06': 'green'
   };
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: _styleModule["default"].tooltip,
