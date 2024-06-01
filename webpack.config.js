@@ -1,6 +1,5 @@
 const path = require('path')
 
-// Configuration for the browser
 const browserConfig = {
   mode: 'production',
   target: 'web',
@@ -26,14 +25,9 @@ const browserConfig = {
   },
   resolve: {
     extensions: ['.js', '.jsx']
-  },
-  externals: {
-    react: 'commonjs react',
-    'react-dom': 'commonjs react-dom'
   }
 }
 
-// Configuration for Node.js
 const nodeConfig = {
   mode: 'production',
   target: 'node',
