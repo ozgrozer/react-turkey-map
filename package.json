@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
@@ -17,7 +17,7 @@
     "dev": "parcel ./example/index.html --dist-dir ./dist --public-url /",
     "build": "npm run build1 && npm run build2",
     "build1": "webpack --config webpack.config.js",
-    "build2": "rm ./build/TurkeyMap.js.LICENSE.txt"
+    "build2": "rm ./build/TurkeyMap.js.LICENSE.txt && rm ./build/TurkeyMap.web.js.LICENSE.txt"
   },
   "peerDependencies": {
     "@emotion/react": "^11.11.4",
