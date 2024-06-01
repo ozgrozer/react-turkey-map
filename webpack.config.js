@@ -25,6 +25,10 @@ const browserConfig = {
   },
   resolve: {
     extensions: ['.js', '.jsx']
+  },
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM'
   }
 }
 
