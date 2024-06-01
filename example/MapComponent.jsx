@@ -5,8 +5,11 @@ import TurkeyMap from './../src/TurkeyMap'
 // npm test
 // import TurkeyMap from 'react-turkey-map'
 
-export default () => {
+export default ({ colorData, tooltipData }) => {
   return (
-    <TurkeyMap />
+    <TurkeyMap
+      colorData={colorData}
+      tooltipData={tooltipData}
+    />
   )
 }

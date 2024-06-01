@@ -1,26 +1,26 @@
 /** @jsxImportSource @emotion/react */
-import { css } from '@emotion/react'
+import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import BasicMap from './BasicMap'
-
-const styles = {
-  wrapper: css`
-    width: 90%;
-    margin: auto;
-    h1 {
-      padding: 10px 20px;
-      margin-bottom: 50px;
-      background-color: #eee;
-    }
-  `
-}
+import styles from './styles'
+import Buttons from './Buttons'
+import MapComponent from './MapComponent'
 
 const App = () => {
+  const [colorData, setColorData] = useState({})
+  const [tooltipData, setTooltipData] = useState({})
+
   return (
     <div css={styles.wrapper}>
-      <h1>Basic Map</h1>
-      <BasicMap />
+      <Buttons
+        setColorData={setColorData}
+        setTooltipData={setTooltipData}
+      />
+
+      <MapComponent
+        colorData={colorData}
+        tooltipData={tooltipData}
+      />
     </div>
   )
 }
