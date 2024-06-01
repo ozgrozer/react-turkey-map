@@ -7,7 +7,13 @@ Customizable Turkey map
 
 ## Demo
 
+Basic Map
+
 [PlayCode](https://playcode.io/1891552) - [StackBlitz](https://stackblitz.com/edit/react-turkey-map?file=src%2FApp.jsx) - [CodeSandbox](https://codesandbox.io/p/sandbox/react-turkey-map-kwxylt?file=%2Fsrc%2FApp.jsx) - [Vercel (Next.js)](https://react-turkey-map-basic.vercel.app) - [CodePen (UMD)](https://codepen.io/ozgrozer/pen/JjqWEbe?editors=1000) - [JSFiddle (UMD)](https://jsfiddle.net/ozgrozer/314nLwa2/)
+
+Colorful Map
+
+[PlayCode](https://playcode.io/1891656) - [StackBlitz](https://stackblitz.com/edit/react-turkey-map-lemehe?file=src%2FApp.jsx) - [CodeSandbox](https://codesandbox.io/p/sandbox/react-turkey-map-colorful-ds9tj3?file=%2Fsrc%2FApp.jsx) - [Vercel (Next.js)](https://react-turkey-map-colorful.vercel.app/)
 
 ## Preview
 
