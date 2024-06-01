@@ -56,7 +56,7 @@ export default ({ colorData: _colorData, showTooltip: _showTooltip, tooltipData:
           version='1.1'
           onClick={handleClick}
           css={styles.turkeyMap}
-          viewBox='0 0 1007.478 527.323'
+          viewBox='0 0 1007 443'
           xmlns='http://www.w3.org/2000/svg'
           {...(showTooltip ? { onMouseOut: handleMouseOut } : {})}
           {...(showTooltip ? { onMouseOver: handleMouseOver } : {})}
