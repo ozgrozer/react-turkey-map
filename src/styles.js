@@ -3,13 +3,10 @@ import { css } from '@emotion/react'
 
 export default {
   turkeyMapWrapper: css`
-    margin: 0 auto;
-    max-width: 1140px;
-    text-align: center;
+    width: 100%;
   `,
   turkeyMap: css`
     width: 100%;
-    height: auto;
   `,
   path: css`
     fill: #bbb;
