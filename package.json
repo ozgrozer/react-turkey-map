@@ -22,11 +22,11 @@
     "build4": "rm ./build/TurkeyMap.js && mv ./build/TurkeyMap.min.js ./build/TurkeyMap.js"
   },
   "peerDependencies": {
+    "@emotion/react": "^11.11.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@emotion/react": "^11.11.4",
     "parcel": "^2.12.0",
     "process": "^0.11.10",
     "sass": "^1.77.4",
