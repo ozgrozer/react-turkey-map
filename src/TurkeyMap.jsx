@@ -1,7 +1,39 @@
+/** @jsxImportSource @emotion/react */
+import { css } from '@emotion/react'
 import React, { useState } from 'react'
 
 import cities from './cities'
-import styles from './styles'
+
+const styles = {
+  turkeyMapWrapper: css`
+    margin: 0 auto;
+    max-width: 1140px;
+    text-align: center;
+  `,
+  turkeyMap: css`
+    width: 100%;
+    height: auto;
+  `,
+  path: css`
+    fill: #bbb;
+    cursor: pointer;
+    &:hover {
+      fill: #aaa;
+    }
+  `,
+  tooltipCss: css`
+    z-index: 2;
+    position: absolute;
+  `,
+  tooltipContent: css`
+    color: #fff;
+    font-size: 14px;
+    background: #000;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  `
+}
 
 export default ({ colorData: _colorData }) => {
   const colorData = _colorData || {}
@@ -12,7 +44,7 @@ export default ({ colorData: _colorData }) => {
   const handleMouseOver = (event) => {
     if (event.target.tagName === 'path') {
       const city = event.target.parentNode.getAttribute('data-city')
-      setTooltip((<div style={styles.tooltipContent}>{city}</div>))
+      setTooltip((<div css={styles.tooltipContent}>{city}</div>))
     }
   }
 
@@ -35,22 +67,25 @@ export default ({ colorData: _colorData }) => {
 
   return (
     <div>
-      <div style={{ ...styles.tooltip, top: position.top, left: position.left }}>
+      <div
+        css={styles.tooltipCss}
+        style={{ top: position.top, left: position.left }}
+      >
         {tooltip}
       </div>
 
-      <div style={styles.turkeyMapWrapper}>
+      <div css={styles.turkeyMapWrapper}>
         <svg
           version='1.1'
           onClick={handleClick}
+          css={styles.turkeyMap}
           onMouseOut={handleMouseOut}
-          style={styles.turkeyMap}
           onMouseOver={handleMouseOver}
           onMouseMove={handleMouseMove}
           viewBox='0 0 1007.478 527.323'
           xmlns='http://www.w3.org/2000/svg'
         >
-          <g id='turkiye'>
+          <g>
             {
               cities.map((city, key) => {
                 return (
@@ -65,13 +100,14 @@ export default ({ colorData: _colorData }) => {
                         ? (
                           <path
                             d={city.draw}
-                            style={{ ...styles.path, fill: colorData[city.plate] }}
+                            css={styles.path}
+                            style={{ fill: colorData[city.plate] }}
                           />
                           )
                         : (
                           <path
                             d={city.draw}
-                            style={styles.path}
+                            css={styles.path}
                           />
                           )
                     }

@@ -1,7 +1,13 @@
 import { createRoot } from 'react-dom/client'
 
-import TurkeyMap from './../build/TurkeyMap'
-// import TurkeyMap from './../src/TurkeyMap'
+// development
+import TurkeyMap from './../src/TurkeyMap'
+
+// build test
+// import TurkeyMap from './../build/TurkeyMap'
+
+// npm test
+// import TurkeyMap from 'react-turkey-map'
 
 const App = () => {
   const colorData = {
