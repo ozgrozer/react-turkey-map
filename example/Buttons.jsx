@@ -1,16 +1,19 @@
 /** @jsxImportSource @emotion/react */
 
 import styles from './styles'
+import getCityColors from './getCityColors'
 import populationByCities from './populationByCities'
 
 export default ({ setColorData, setTooltipData }) => {
+  const cityColors = getCityColors(populationByCities)
+
   const basicMapOnClick = () => {
     setColorData({})
     setTooltipData({})
   }
 
   const colorfulMapOnClick = () => {
-    setColorData({ '01': 'red' })
+    setColorData(cityColors)
     setTooltipData(populationByCities)
   }
 
