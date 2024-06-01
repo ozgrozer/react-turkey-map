@@ -26,7 +26,7 @@ module.exports = {
     extensions: ['.js', '.jsx']
   },
   externals: {
-    react: 'react',
-    'react-dom': 'react-dom'
+    react: 'React',
+    'react-dom': 'ReactDOM'
   }
 }
