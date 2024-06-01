@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.6",
+    "@babel/plugin-transform-runtime": "^7.24.6",
     "@babel/preset-env": "^7.24.6",
     "@babel/preset-react": "^7.24.6",
     "babel-loader": "^9.1.3",
@@ -38,14 +39,21 @@
   },
   "babel": {
     "presets": [
-      ["@babel/preset-env", {
-        "targets": {
-          "node": "current"
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current",
+            "browsers": "> 0.25%, not dead"
+          }
         }
-      }],
-      ["@babel/preset-react", {
-        "runtime": "automatic"
-      }]
+      ],
+      [
+        "@babel/preset-react",
+        {
+          "runtime": "automatic"
+        }
+      ]
     ]
   },
   "keywords": [
