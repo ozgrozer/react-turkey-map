@@ -18,6 +18,7 @@ npm install react-turkey-map
 ```
 
 ## Usage
+
 ```jsx
 import TurkeyMap from 'react-turkey-map'
 
@@ -26,6 +27,41 @@ export default () => {
     <TurkeyMap />
   )
 }
+```
+
+## Props
+
+```jsx
+<TurkeyMap
+  showTooltip
+  colorData={{}}
+  tooltipData={{}}
+/>
+
+// types and defaults
+showTooltip: bool (default: true)
+colorData: object (default: {})
+tooltipData: object (default: {})
+
+// colorData prop
+// plate: city color
+colorData={{
+  '34': '#071E58',
+  '06': '#253494',
+  '35': '#253494',
+  '16': '#253494',
+  '07': '#225EA8'
+}}
+
+// tooltipData prop
+// plate: city tooltip
+tooltipData={{
+  '34': '15.655.924',
+  '06': '5.803.482',
+  '35': '4.479.525',
+  '16': '3.214.571',
+  '07': '2.696.249'
+}}
 ```
 
 ## Contribution
