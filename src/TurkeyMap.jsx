@@ -4,14 +4,15 @@ import React, { useState } from 'react'
 import cities from './cities'
 import styles from './styles'
 
-export default ({ colorData: _colorData, tooltipData: _tooltipData }) => {
+export default ({ colorData: _colorData, showTooltip: _showTooltip, tooltipData: _tooltipData }) => {
   const colorData = _colorData || {}
+  const showTooltip = _showTooltip !== undefined ? _showTooltip : true
   const tooltipData = _tooltipData || {}
 
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
 
-  const handleMouseOver = (event) => {
+  const handleMouseOver = event => {
     if (event.target.tagName === 'path') {
       const city = event.target.parentNode.getAttribute('data-city')
       const plate = event.target.parentNode.getAttribute('data-plate')
@@ -24,7 +25,7 @@ export default ({ colorData: _colorData, tooltipData: _tooltipData }) => {
     }
   }
 
-  const handleMouseMove = (event) => {
+  const handleMouseMove = event => {
     setPosition({ top: event.pageY + 25, left: event.pageX })
   }
 
@@ -32,7 +33,7 @@ export default ({ colorData: _colorData, tooltipData: _tooltipData }) => {
     setTooltip('')
   }
 
-  const handleClick = (event) => {
+  const handleClick = event => {
     if (event.target.tagName === 'path') {
       const parent = event.target.parentNode
       const city = parent.getAttribute('data-city')
@@ -55,11 +56,11 @@ export default ({ colorData: _colorData, tooltipData: _tooltipData }) => {
           version='1.1'
           onClick={handleClick}
           css={styles.turkeyMap}
-          onMouseOut={handleMouseOut}
-          onMouseOver={handleMouseOver}
-          onMouseMove={handleMouseMove}
           viewBox='0 0 1007.478 527.323'
           xmlns='http://www.w3.org/2000/svg'
+          {...(showTooltip ? { onMouseOut: handleMouseOut } : {})}
+          {...(showTooltip ? { onMouseOver: handleMouseOver } : {})}
+          {...(showTooltip ? { onMouseMove: handleMouseMove } : {})}
         >
           <g>
             {
