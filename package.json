@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
@@ -15,7 +15,11 @@
   },
   "scripts": {
     "dev": "parcel ./example/index.html --dist-dir ./dist --public-url /",
-    "build": "parcel build ./src/TurkeyMap.jsx --dist-dir build --public-url ./ --no-source-maps"
+    "build": "npm run build1 && npm run build2 && npm run build3 && npm run build4",
+    "build1": "rm -rf ./.parcel-cache && rm -rf ./build",
+    "build2": "parcel build ./src/TurkeyMap.jsx --dist-dir build --public-url ./ --no-source-maps",
+    "build3": "terser ./build/TurkeyMap.js -o ./build/TurkeyMap.min.js",
+    "build4": "rm ./build/TurkeyMap.js && mv ./build/TurkeyMap.min.js ./build/TurkeyMap.js"
   },
   "peerDependencies": {
     "react": "^18.3.1",
