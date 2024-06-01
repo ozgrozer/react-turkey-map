@@ -4,8 +4,9 @@ import React, { useState } from 'react'
 import cities from './cities'
 import styles from './styles'
 
-export default ({ colorData: _colorData }) => {
+export default ({ colorData: _colorData, tooltipData: _tooltipData }) => {
   const colorData = _colorData || {}
+  const tooltipData = _tooltipData || {}
 
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -13,7 +14,13 @@ export default ({ colorData: _colorData }) => {
   const handleMouseOver = (event) => {
     if (event.target.tagName === 'path') {
       const city = event.target.parentNode.getAttribute('data-city')
-      setTooltip((<div css={styles.tooltipContent}>{city}</div>))
+      const plate = event.target.parentNode.getAttribute('data-plate')
+      const TooltipComponent = (
+        <div css={styles.tooltipContent}>
+          {city}{tooltipData[plate] ? `: ${tooltipData[plate]}` : ''}
+        </div>
+      )
+      setTooltip(TooltipComponent)
     }
   }
 

@@ -15,9 +15,15 @@ const App = () => {
     '06': 'green'
   }
 
+  const tooltipData = {
+    '07': '150',
+    '06': '12'
+  }
+
   return (
     <TurkeyMap
       colorData={colorData}
+      tooltipData={tooltipData}
     />
   )
 }
