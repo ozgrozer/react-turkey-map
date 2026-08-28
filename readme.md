@@ -63,7 +63,7 @@ export default () => {
   showCityTooltip
   tooltipData={{}}
   showMarkerTooltip
-  onCityClick={({ id, plate, city }, event) => {}}
+  onCityClick={({ plate, city }, event) => {}}
   onMarkerClick={({ id, plate, city }, event) => {}}
 />
 
@@ -112,13 +112,13 @@ markers={[
 // id and title are optional, color defaults to #e2231a
 // markers with missing or unparseable coordinates are skipped
 
-// onCityClick and onMarkerClick both hand back the same three keys,
+// onCityClick and onMarkerClick both hand back the province involved,
 // plus the original click event
 
 // onCityClick prop
-onCityClick={({ id, plate, city }, event) => {
-  console.log(id, plate, city)
-  // 06 06 Ankara
+onCityClick={({ plate, city }, event) => {
+  console.log(plate, city)
+  // 06 Ankara
 }}
 
 // onMarkerClick prop
@@ -127,8 +127,7 @@ onMarkerClick={({ id, plate, city }, event) => {
   // istanbul 34 İstanbul
 }}
 
-// id is what you clicked: the plate for a province, your own id for a marker
-// plate and city are the province involved, resolved from the marker's
+// plate and city are the province involved, resolved for a marker from its
 // coordinates, and are both null for a marker outside every province
 // your other marker fields (title, latitude, longitude, color) come along too
 ```

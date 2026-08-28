@@ -393,8 +393,7 @@ export default ({
       const parent = event.target.parentNode
       const city = parent.getAttribute('data-city')
       const plate = parent.getAttribute('data-plate')
-      // id is whatever was clicked, which for a province is its plate
-      const clicked = { id: plate, plate, city }
+      const clicked = { plate, city }
       // the log is what this did before there was a callback to hand it to
       if (onCityClick) onCityClick(clicked, event)
       else console.log(clicked)
@@ -447,19 +446,19 @@ export default ({
         <circle
           cx={x}
           cy={y}
-          key={marker.id !== undefined ? marker.id : key}
+          onClick={onClick}
           css={styles.marker}
+          data-marker-title={marker.title || undefined}
+          key={marker.id !== undefined ? marker.id : key}
           // constant on screen whatever the zoom or the rendered map width
           r={(markerRadius * unitsPerPixel) / transform.zoom}
-          data-marker-title={marker.title || undefined}
           style={{
-            fill: marker.color || defaultMarkerColor,
             // non-scaling-stroke already holds this at a constant screen
             // width, so dividing by the zoom as the radius does would shrink
             // the border away
-            strokeWidth: markerStrokeWidth
+            strokeWidth: markerStrokeWidth,
+            fill: marker.color || defaultMarkerColor
           }}
-          onClick={onClick}
         />
       )
     })
@@ -489,8 +488,8 @@ export default ({
           ref={svgRef}
           version='1.1'
           onClick={handleClick}
-          viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
           xmlns='http://www.w3.org/2000/svg'
+          viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
           css={[
             styles.turkeyMap,
             zoomable && styles.zoomableMap,

@@ -10,8 +10,8 @@ import TurkeyMap from './../src/TurkeyMap'
 import styles from './styles'
 
 export default ({ example }) => {
-  const onCityClick = ({ id, plate, city }) => {
-    console.log('onCityClick', { id, plate, city })
+  const onCityClick = ({ plate, city }) => {
+    console.log('onCityClick', { plate, city })
   }
 
   const onMarkerClick = marker => {
