@@ -23,11 +23,15 @@ Zoom, Pan & Markers
 
 Basic Map
 
-<img src="./preview/basic-map.png" alt="" width="600" />
+<img src="./preview/basic-map.jpg" alt="" width="600" />
 
 Colorful Map
 
-<img src="./preview/colorful-map.png" alt="" width="600" />
+<img src="./preview/colorful-map.jpg" alt="" width="600" />
+
+Zoom, Pan & Markers
+
+<img src="./preview/zoom-pan-markers.jpg" alt="" width="600" />
 
 ## Installation
 
