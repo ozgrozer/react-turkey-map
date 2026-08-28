@@ -12,6 +12,7 @@ import { findProvince } from './locate'
 import {
   panBy,
   easeOut,
+  approach,
   zoomAround,
   wheelZoomFactor,
   identityTransform,
@@ -22,6 +23,16 @@ import {
 const dragThreshold = 3
 const doubleClickZoom = 2
 const doubleClickDuration = 250
+// how quickly the rendered zoom chases the one the wheel has asked for; small
+// enough to feel immediate, large enough to swallow a jittery first delta
+const zoomTimeConstant = 70
+// below this the next frame would not be visible, so the easing stops
+const zoomSettleRatio = 1e-4
+// a gap this long ends the gesture, so the next scroll starts from the screen
+// rather than stacking onto a target nobody is chasing any more
+const gestureIdle = 150
+// a frame this late means the tab was hidden; easing across it would jump
+const maxFrameGap = 100
 const markerRadius = 5
 const markerStrokeWidth = 1.5
 const defaultMarkerColor = '#e2231a'
@@ -80,6 +91,10 @@ export default ({
   const dragRef = useRef(null)
   const transformRef = useRef(identityTransform)
   const clickSuppressedRef = useRef(false)
+  // { zoom, point, at } — where the wheel wants to be, which the rendered
+  // transform eases towards rather than snapping to
+  const wheelRef = useRef(null)
+  const zoomFrameRef = useRef(null)
 
   // the ref mirrors the state so back to back wheel events compose correctly
   const commitTransform = useCallback(next => {
@@ -94,11 +109,54 @@ export default ({
     }
   }, [])
 
+  const cancelZoom = useCallback(() => {
+    if (zoomFrameRef.current !== null) {
+      window.cancelAnimationFrame(zoomFrameRef.current)
+      zoomFrameRef.current = null
+    }
+    wheelRef.current = null
+  }, [])
+
+  // wheel events arrive faster than frames and their first delta is often
+  // noise, so they accumulate into a target that one rAF loop eases towards.
+  // applying each event straight to the transform is what made a zoom in read
+  // as a flick out followed by a zoom in
+  const runZoomLoop = useCallback(() => {
+    if (zoomFrameRef.current !== null) return
+    let previous = window.performance.now()
+
+    const step = now => {
+      zoomFrameRef.current = null
+      const gesture = wheelRef.current
+      if (!gesture) return
+
+      const current = transformRef.current
+      const elapsed = Math.min(now - previous, maxFrameGap)
+      previous = now
+
+      const remaining = gesture.zoom - current.zoom
+      const settled = Math.abs(remaining) <= current.zoom * zoomSettleRatio
+      const zoom = settled
+        ? gesture.zoom
+        : current.zoom + remaining * approach(elapsed, zoomTimeConstant)
+
+      commitTransform(
+        zoomAround(gesture.point, zoom, current, minZoom, maxZoom)
+      )
+
+      if (settled) wheelRef.current = null
+      else zoomFrameRef.current = window.requestAnimationFrame(step)
+    }
+
+    zoomFrameRef.current = window.requestAnimationFrame(step)
+  }, [minZoom, maxZoom, commitTransform])
+
   // a css transition would leave the marker radii, which are derived from the
   // zoom, out of sync with the animation
   const animateTo = useCallback(
     target => {
       cancelAnimation()
+      cancelZoom()
       const start = transformRef.current
       const startedAt = window.performance.now()
 
@@ -111,7 +169,7 @@ export default ({
 
       frameRef.current = window.requestAnimationFrame(step)
     },
-    [cancelAnimation, commitTransform]
+    [cancelAnimation, cancelZoom, commitTransform]
   )
 
   // event position in viewBox units
@@ -130,24 +188,41 @@ export default ({
     const handleWheel = event => {
       event.preventDefault()
       cancelAnimation()
-      const current = transformRef.current
-      const factor = wheelZoomFactor(event.deltaY, event.deltaMode)
-      commitTransform(
-        zoomAround(
-          getPoint(event),
-          current.zoom * factor,
-          current,
-          minZoom,
-          maxZoom
-        )
+
+      const now = window.performance.now()
+      const gesture = wheelRef.current
+      // a gesture still in flight keeps stacking onto its own target, so
+      // spinning the wheel fast still travels far; a fresh one starts from
+      // what is actually on screen
+      const from =
+        gesture && now - gesture.at < gestureIdle
+          ? gesture.zoom
+          : transformRef.current.zoom
+      // a trackpad pinch arrives as ctrl+wheel with much smaller deltas than
+      // the two finger scroll it shares an event with
+      const factor = wheelZoomFactor(
+        event.deltaY,
+        event.deltaMode,
+        event.ctrlKey
       )
+
+      wheelRef.current = {
+        at: now,
+        // re-read every event so the map follows a pointer that moves mid
+        // gesture; harmless while the zoom is unchanged, since the anchor
+        // only matters once there is a ratio to apply it to
+        point: getPoint(event),
+        zoom: Math.min(Math.max(from * factor, minZoom), maxZoom)
+      }
+
+      runZoomLoop()
     }
 
     // react registers wheel listeners passively, so preventDefault only works
     // on a listener we add ourselves
     svg.addEventListener('wheel', handleWheel, { passive: false })
     return () => svg.removeEventListener('wheel', handleWheel)
-  }, [zoomable, minZoom, maxZoom, getPoint, cancelAnimation, commitTransform])
+  }, [zoomable, minZoom, maxZoom, getPoint, cancelAnimation, runZoomLoop])
 
   useEffect(() => {
     if (!dragging) return
@@ -155,12 +230,25 @@ export default ({
     const handlePointerMove = event => {
       const drag = dragRef.current
       if (!drag) return
-      const dx = event.clientX - drag.pointerX
-      const dy = event.clientY - drag.pointerY
-      if (!drag.moved && Math.hypot(dx, dy) <= dragThreshold) return
-      drag.moved = true
+      if (!drag.moved) {
+        const dx = event.clientX - drag.pointerX
+        const dy = event.clientY - drag.pointerY
+        if (Math.hypot(dx, dy) <= dragThreshold) return
+        drag.moved = true
+        // pan from here rather than from the press, or the map jumps by the
+        // threshold the moment the drag is recognised
+        drag.pointerX = event.clientX
+        drag.pointerY = event.clientY
+        drag.origin = transformRef.current
+      }
       commitTransform(
-        panBy(drag.origin, dx * drag.scaleX, dy * drag.scaleY, minZoom, maxZoom)
+        panBy(
+          drag.origin,
+          (event.clientX - drag.pointerX) * drag.scaleX,
+          (event.clientY - drag.pointerY) * drag.scaleY,
+          minZoom,
+          maxZoom
+        )
       )
     }
 
@@ -185,12 +273,19 @@ export default ({
     }
   }, [dragging, minZoom, maxZoom, commitTransform])
 
-  useEffect(() => cancelAnimation, [cancelAnimation])
+  useEffect(() => {
+    return () => {
+      cancelAnimation()
+      cancelZoom()
+    }
+  }, [cancelAnimation, cancelZoom])
 
   const handlePointerDown = event => {
     if (!zoomable || event.button !== 0) return
     const rect = svgRef.current.getBoundingClientRect()
     cancelAnimation()
+    // a drag must not fight a zoom that is still easing towards its target
+    cancelZoom()
     clickSuppressedRef.current = false
     dragRef.current = {
       moved: false,
@@ -277,7 +372,8 @@ export default ({
     event.stopPropagation()
     if (clickSuppressedRef.current) return
     // both null for a marker that falls outside every province
-    const { plate = null, city = null } = findProvince(longitude, latitude) || {}
+    const { plate = null, city = null } =
+      findProvince(longitude, latitude) || {}
     const clicked = { ...marker, plate, city }
     // anchored in map units, so it rides the transform like the marker does
     setPopup({ marker: clicked, point: projectPoint(longitude, latitude) })
@@ -392,17 +488,15 @@ export default ({
           </g>
         </svg>
 
-        {popupPosition
-          ? (
-            <div
-              style={popupPosition}
-              css={styles.markerPopup}
-              onClick={event => event.stopPropagation()}
-            >
-              {renderMarkerPopup(popup.marker)}
-            </div>
-            )
-          : null}
+        {popupPosition ? (
+          <div
+            style={popupPosition}
+            css={styles.markerPopup}
+            onClick={event => event.stopPropagation()}
+          >
+            {renderMarkerPopup(popup.marker)}
+          </div>
+        ) : null}
       </div>
     </div>
   )

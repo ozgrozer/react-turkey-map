@@ -50,8 +50,21 @@ export const interpolateTransform = (start, target, progress) => ({
 // cubic ease out
 export const easeOut = progress => 1 - Math.pow(1 - progress, 3)
 
-export const wheelZoomFactor = (deltaY, deltaMode) => {
-  // firefox reports lines, some setups report pages
-  const step = deltaMode === 1 ? 16 : deltaMode === 2 ? viewBoxHeight : 1
-  return Math.pow(1.0015, -deltaY * step)
+// a mouse notch reports about 100 at once, a trackpad swipe a few units per
+// event and a pinch smaller still, so each needs its own sensitivity
+const scrollSensitivity = 0.01
+const pinchSensitivity = 0.03
+// one violent flick must not cross half the zoom range in a single event
+const maxWheelDelta = 60
+
+export const wheelZoomFactor = (deltaY, deltaMode, pinch) => {
+  // firefox reports lines, some setups report pages, both in screen pixels
+  const step = deltaMode === 1 ? 16 : deltaMode === 2 ? 400 : 1
+  const delta = Math.max(-maxWheelDelta, Math.min(maxWheelDelta, deltaY * step))
+  return Math.exp(-delta * (pinch ? pinchSensitivity : scrollSensitivity))
 }
+
+// the fraction of the remaining distance to cover after `elapsed` ms, so the
+// easing runs at the same speed whatever the frame rate
+export const approach = (elapsed, timeConstant) =>
+  1 - Math.exp(-elapsed / timeConstant)
