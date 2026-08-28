@@ -419,7 +419,10 @@ export default ({
           data-marker-title={marker.title || undefined}
           style={{
             fill: marker.color || defaultMarkerColor,
-            strokeWidth: markerStrokeWidth / transform.zoom
+            // non-scaling-stroke already holds this at a constant screen
+            // width, so dividing by the zoom as the radius does would shrink
+            // the border away
+            strokeWidth: markerStrokeWidth
           }}
           onClick={onClick}
         />
