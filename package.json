@@ -17,7 +17,11 @@
     "dev": "parcel ./example/index.html --dist-dir ./dist --public-url /",
     "build": "npm run build1 && npm run build2",
     "build1": "webpack --config webpack.config.js",
-    "build2": "rm ./build/TurkeyMap.js.LICENSE.txt && rm ./build/TurkeyMap.web.js.LICENSE.txt"
+    "build2": "rm ./build/TurkeyMap.js.LICENSE.txt && rm ./build/TurkeyMap.web.js.LICENSE.txt",
+    "build:geo": "node scripts/build-geo-cities",
+    "verify": "npm run verify:transform && npm run verify:geo",
+    "verify:geo": "node scripts/build-geo-cities/verify",
+    "verify:transform": "node scripts/verify-transform"
   },
   "peerDependencies": {
     "@emotion/react": "^11.11.4",

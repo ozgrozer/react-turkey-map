@@ -1,37 +1,23 @@
 /** @jsxImportSource @emotion/react */
 
 import styles from './styles'
-import getCityColors from './getCityColors'
-import populationByCities from './populationByCities'
+import examples from './examples'
 
-export default ({ setColorData, setTooltipData }) => {
-  const cityColors = getCityColors(populationByCities)
-
-  const basicMapOnClick = () => {
-    setColorData({})
-    setTooltipData({})
-  }
-
-  const colorfulMapOnClick = () => {
-    setColorData(cityColors)
-    setTooltipData(populationByCities)
-  }
-
+export default ({ current, setCurrent }) => {
   return (
     <div css={styles.buttons}>
-      <button
-        css={styles.button}
-        onClick={basicMapOnClick}
-      >
-        Basic Map
-      </button>
-
-      <button
-        css={styles.button}
-        onClick={colorfulMapOnClick}
-      >
-        Colorful Map
-      </button>
+      {examples.map(example => {
+        return (
+          <button
+            key={example.id}
+            css={styles.button}
+            onClick={() => setCurrent(example)}
+            style={example.id === current.id ? { fontWeight: 'bold' } : {}}
+          >
+            {example.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

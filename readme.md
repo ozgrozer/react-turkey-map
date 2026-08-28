@@ -49,15 +49,34 @@ export default () => {
 
 ```jsx
 <TurkeyMap
+  zoomable
   showTooltip
+  clickableCities
+  showCityTooltip
+  showMarkerTooltip
+  minZoom={1}
+  maxZoom={40}
+  markers={[]}
   colorData={{}}
   tooltipData={{}}
+  onCityClick={({ id, plate, city }, event) => {}}
+  onMarkerClick={({ id, plate, city }, event) => {}}
 />
 
 // types and defaults
 showTooltip: bool (default: true)
+showCityTooltip: bool (default: showTooltip)
+showMarkerTooltip: bool (default: showTooltip, false with renderMarkerPopup)
 colorData: object (default: {})
 tooltipData: object (default: {})
+zoomable: bool (default: false)
+minZoom: number (default: 1)
+maxZoom: number (default: 40)
+markers: array (default: [])
+clickableCities: bool (default: true)
+renderMarkerPopup: function (default: undefined)
+onCityClick: function (default: undefined)
+onMarkerClick: function (default: undefined)
 
 // colorData prop
 // plate: city color
@@ -78,6 +97,158 @@ tooltipData={{
   '16': '3.214.571',
   '07': '2.696.249'
 }}
+
+// markers prop
+// placed by real coordinates, on the same projection as the provinces
+markers={[
+  { id: 'istanbul', title: 'İstanbul', latitude: 41.0082, longitude: 28.9784 },
+  { id: 'ankara', title: 'Ankara', latitude: 39.9334, longitude: 32.8597, color: '#1b6ac9' }
+]}
+
+// id and title are optional, color defaults to #e2231a
+// markers with missing or unparseable coordinates are skipped
+
+// onCityClick and onMarkerClick both hand back the same three keys,
+// plus the original click event
+
+// onCityClick prop
+onCityClick={({ id, plate, city }, event) => {
+  console.log(id, plate, city)
+  // 06 06 Ankara
+}}
+
+// onMarkerClick prop
+onMarkerClick={({ id, plate, city }, event) => {
+  console.log(id, plate, city)
+  // istanbul 34 İstanbul
+}}
+
+// id is what you clicked: the plate for a province, your own id for a marker
+// plate and city are the province involved, resolved from the marker's
+// coordinates, and are both null for a marker outside every province
+// your other marker fields (title, latitude, longitude, color) come along too
+```
+
+Without a callback, both log to the console instead, so clicks are visible out
+of the box.
+
+## Marker tooltips
+
+Markers get the built-in tooltip on hover, showing their `title`. It follows
+the cursor, so it always describes whatever the pointer is over and can never
+go stale.
+
+`showTooltip` turns both kinds off. To keep one and drop the other, set
+`showCityTooltip` or `showMarkerTooltip`:
+
+```jsx
+// markers respond, provinces stay quiet
+<TurkeyMap markers={markers} showCityTooltip={false} />
+```
+
+For a tooltip on click instead, `onMarkerClick` hands you the click event, so
+you can place your own anywhere on the page:
+
+```jsx
+import { useState } from 'react'
+import TurkeyMap from 'react-turkey-map'
+
+export default () => {
+  const [popup, setPopup] = useState(null)
+
+  const onMarkerClick = (marker, event) => {
+    setPopup({
+      text: `${marker.title} — ${marker.city} (${marker.plate})`,
+      top: event.pageY + 12,
+      left: event.pageX + 12
+    })
+  }
+
+  return (
+    <div>
+      {popup
+        ? (
+          <div style={{ position: 'absolute', top: popup.top, left: popup.left }}>
+            {popup.text}
+          </div>
+          )
+        : null}
+
+      <TurkeyMap
+        zoomable
+        markers={markers}
+        onMarkerClick={onMarkerClick}
+      />
+    </div>
+  )
+}
+```
+
+A tooltip placed this way stays where it was clicked, so zooming or panning
+afterwards leaves it behind while the marker moves on. For one that follows the
+marker, hand the map the content instead and let it do the positioning:
+
+```jsx
+<TurkeyMap
+  zoomable
+  markers={markers}
+  renderMarkerPopup={marker => (
+    <div className='popup'>
+      {marker.title} — {marker.city} ({marker.plate})
+    </div>
+  )}
+/>
+```
+
+Clicking a marker opens the popup above it and it stays there through zoom,
+pan and double click, disappearing once the marker itself is off the map.
+Clicking anywhere else closes it. The marker you get is the same one
+`onMarkerClick` receives, province and all.
+
+With `renderMarkerPopup` set, the hover tooltip on markers turns itself off, so
+you don't get both. Pass `showMarkerTooltip` explicitly if you want them
+together.
+
+## Map without clickable provinces
+
+For a map where only the markers respond, turn the provinces off entirely:
+
+```jsx
+<TurkeyMap
+  zoomable
+  markers={markers}
+  showCityTooltip={false}
+  clickableCities={false}
+/>
+```
+
+`clickableCities={false}` stops `onCityClick` firing, and drops the pointer
+cursor and hover highlight with it, so the provinces read as a backdrop.
+
+## Zoom and pan
+
+`zoomable` is off by default. Turning it on adds:
+
+- mouse wheel zoom around the cursor
+- double click to zoom 2x around the cursor
+- drag to pan
+
+Province strokes and marker sizes stay constant on screen at any zoom, and the
+map is clamped so panning can never expose empty space, so zooming back out to
+`minZoom` always brings it back to where it started.
+
+## Map data
+
+The 81 provinces come from [Natural Earth](https://github.com/nvkelso/natural-earth-vector)
+10m admin-1 states/provinces (public domain), drawn in Web Mercator and fitted
+to a `1007x443` viewBox. Markers use that same projection, so pins and province
+shapes always agree.
+
+`src/geoCities.js` is generated. To rebuild it:
+
+```sh
+npm run build:geo    # downloads the ~40MB source on first run
+npm run verify       # checks the projection, the outlines and the zoom maths
 ```
 
 ## Contribution

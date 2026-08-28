@@ -4,22 +4,22 @@ import { createRoot } from 'react-dom/client'
 
 import styles from './styles'
 import Buttons from './Buttons'
+import examples from './examples'
 import MapComponent from './MapComponent'
 
 const App = () => {
-  const [colorData, setColorData] = useState({})
-  const [tooltipData, setTooltipData] = useState({})
+  const [current, setCurrent] = useState(examples[0])
 
   return (
     <div css={styles.wrapper}>
       <Buttons
-        setColorData={setColorData}
-        setTooltipData={setTooltipData}
+        current={current}
+        setCurrent={setCurrent}
       />
 
       <MapComponent
-        colorData={colorData}
-        tooltipData={tooltipData}
+        key={current.id}
+        example={current}
       />
     </div>
   )
