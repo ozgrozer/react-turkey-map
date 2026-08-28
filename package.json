@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "version": "1.0.19",
+  "version": "2.0.0",
   "name": "react-turkey-map",
   "main": "./build/TurkeyMap.js",
   "description": "Customizable Turkey map",
