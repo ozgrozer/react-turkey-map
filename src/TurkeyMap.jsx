@@ -1,14 +1,15 @@
 /** @jsxImportSource @emotion/react */
+import { createPortal } from 'react-dom'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 import styles from './styles'
+import { findProvince } from './locate'
 import {
   geoPaths,
   projectPoint,
   viewBoxWidth,
   viewBoxHeight
 } from './projection'
-import { findProvince } from './locate'
 import {
   panBy,
   easeOut,
@@ -33,6 +34,7 @@ const zoomSettleRatio = 1e-4
 const gestureIdle = 150
 // a frame this late means the tab was hidden; easing across it would jump
 const maxFrameGap = 100
+// screen pixels, so a marker is the same size on a phone as on a desktop
 const markerRadius = 5
 const markerStrokeWidth = 1.5
 const defaultMarkerColor = '#e2231a'
@@ -44,19 +46,19 @@ const toNumber = value => {
 }
 
 export default ({
-  colorData: _colorData,
-  showTooltip: _showTooltip,
-  showCityTooltip: _showCityTooltip,
-  showMarkerTooltip: _showMarkerTooltip,
-  tooltipData: _tooltipData,
-  zoomable: _zoomable,
+  onCityClick,
+  onMarkerClick,
   minZoom: _minZoom,
   maxZoom: _maxZoom,
-  markers: _markers,
-  clickableCities: _clickableCities,
   renderMarkerPopup,
-  onCityClick,
-  onMarkerClick
+  markers: _markers,
+  zoomable: _zoomable,
+  colorData: _colorData,
+  showTooltip: _showTooltip,
+  tooltipData: _tooltipData,
+  showCityTooltip: _showCityTooltip,
+  clickableCities: _clickableCities,
+  showMarkerTooltip: _showMarkerTooltip
 }) => {
   const colorData = _colorData || {}
   const showTooltip = _showTooltip !== undefined ? _showTooltip : true
@@ -85,6 +87,9 @@ export default ({
   const [dragging, setDragging] = useState(false)
   // { marker, point } for the marker whose popup is open, in map units
   const [popup, setPopup] = useState(null)
+  // viewBox units per screen pixel; the svg is width: 100%, so this is what
+  // keeps the markers a constant size however wide the map is rendered
+  const [unitsPerPixel, setUnitsPerPixel] = useState(1)
 
   const svgRef = useRef(null)
   const frameRef = useRef(null)
@@ -274,6 +279,31 @@ export default ({
   }, [dragging, minZoom, maxZoom, commitTransform])
 
   useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+
+    const measure = () => {
+      const { width } = svg.getBoundingClientRect()
+      // a hidden or not yet laid out map measures 0, which would blow the
+      // markers up to infinity
+      if (width > 0) setUnitsPerPixel(viewBoxWidth / width)
+    }
+
+    measure()
+
+    if (typeof window.ResizeObserver !== 'function') {
+      window.addEventListener('resize', measure)
+      return () => window.removeEventListener('resize', measure)
+    }
+
+    // the map can be resized by its container rather than by the window, so
+    // this watches the element instead of listening for a window resize
+    const observer = new window.ResizeObserver(measure)
+    observer.observe(svg)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     return () => {
       cancelAnimation()
       cancelZoom()
@@ -313,8 +343,17 @@ export default ({
     )
   }
 
+  // client rather than page coordinates, because the tooltip is fixed to the
+  // viewport
+  const trackPointer = event => {
+    setPosition({ top: event.clientY + 25, left: event.clientX })
+  }
+
   const handleMouseOver = event => {
     const target = event.target
+    // mouseover lands before the first mousemove, so without this the
+    // tooltip would appear for a frame wherever the pointer last was
+    trackPointer(event)
 
     if (target.tagName === 'circle') {
       const title = showMarkerTooltip
@@ -339,10 +378,6 @@ export default ({
       )
       setTooltip(TooltipComponent)
     }
-  }
-
-  const handleMouseMove = event => {
-    setPosition({ top: event.pageY + 25, left: event.pageX })
   }
 
   const handleMouseOut = () => {
@@ -414,8 +449,8 @@ export default ({
           cy={y}
           key={marker.id !== undefined ? marker.id : key}
           css={styles.marker}
-          // constant on screen whatever the zoom
-          r={markerRadius / transform.zoom}
+          // constant on screen whatever the zoom or the rendered map width
+          r={(markerRadius * unitsPerPixel) / transform.zoom}
           data-marker-title={marker.title || undefined}
           style={{
             fill: marker.color || defaultMarkerColor,
@@ -430,14 +465,24 @@ export default ({
     })
     .filter(Boolean)
 
+  // on the body rather than inside the map, so a host that hasn't made its
+  // own wrapper a containing block still gets the tooltip under the pointer
+  const tooltipElement =
+    tooltip && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            css={styles.tooltipCss}
+            style={{ top: position.top, left: position.left }}
+          >
+            {tooltip}
+          </div>,
+          document.body
+        )
+      : null
+
   return (
     <div>
-      <div
-        css={styles.tooltipCss}
-        style={{ top: position.top, left: position.left }}
-      >
-        {tooltip}
-      </div>
+      {tooltipElement}
 
       <div css={styles.turkeyMapWrapper}>
         <svg
@@ -455,7 +500,7 @@ export default ({
           {...(zoomable ? { onDoubleClick: handleDoubleClick } : {})}
           {...(anyTooltip ? { onMouseOut: handleMouseOut } : {})}
           {...(anyTooltip ? { onMouseOver: handleMouseOver } : {})}
-          {...(anyTooltip ? { onMouseMove: handleMouseMove } : {})}
+          {...(anyTooltip ? { onMouseMove: trackPointer } : {})}
         >
           <g
             {...(zoomable

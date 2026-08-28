@@ -51,32 +51,32 @@ export default () => {
 <TurkeyMap
   zoomable
   showTooltip
-  clickableCities
-  showCityTooltip
-  showMarkerTooltip
   minZoom={1}
   maxZoom={40}
   markers={[]}
   colorData={{}}
+  clickableCities
+  showCityTooltip
   tooltipData={{}}
+  showMarkerTooltip
   onCityClick={({ id, plate, city }, event) => {}}
   onMarkerClick={({ id, plate, city }, event) => {}}
 />
 
 // types and defaults
-showTooltip: bool (default: true)
-showCityTooltip: bool (default: showTooltip)
-showMarkerTooltip: bool (default: showTooltip, false with renderMarkerPopup)
-colorData: object (default: {})
-tooltipData: object (default: {})
-zoomable: bool (default: false)
+markers: array (default: [])
 minZoom: number (default: 1)
 maxZoom: number (default: 40)
-markers: array (default: [])
+colorData: object (default: {})
+zoomable: bool (default: false)
+tooltipData: object (default: {})
+showTooltip: bool (default: true)
 clickableCities: bool (default: true)
-renderMarkerPopup: function (default: undefined)
 onCityClick: function (default: undefined)
+showCityTooltip: bool (default: showTooltip)
 onMarkerClick: function (default: undefined)
+renderMarkerPopup: function (default: undefined)
+showMarkerTooltip: bool (default: showTooltip, false with renderMarkerPopup)
 
 // colorData prop
 // plate: city color

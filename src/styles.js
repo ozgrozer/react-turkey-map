@@ -53,7 +53,11 @@ export default {
   `,
   tooltipCss: css`
     z-index: 2;
-    position: absolute;
+    /* portalled onto the body and fixed to the viewport, so the tooltip lands
+       in the right place whether or not the host has a positioned wrapper */
+    position: fixed;
+    /* it follows the pointer, so it must never become the pointer's target */
+    pointer-events: none;
   `,
   tooltipContent: css`
     color: #fff;
