@@ -145,6 +145,11 @@ Markers get the built-in tooltip on hover, showing their `title`. It follows
 the cursor, so it always describes whatever the pointer is over and can never
 go stale.
 
+On touch there is no cursor to follow, so a tap opens the tooltip above the
+point you tapped and pins it to the map: it travels with its province or
+marker as you pan and zoom, and disappears with them at the edge. Tapping
+another province moves it there, and tapping off the map closes it.
+
 `showTooltip` turns both kinds off. To keep one and drop the other, set
 `showCityTooltip` or `showMarkerTooltip`:
 
@@ -239,6 +244,15 @@ cursor and hover highlight with it, so the provinces read as a backdrop.
 - mouse wheel zoom around the cursor
 - double click to zoom 2x around the cursor
 - drag to pan
+- pinch with two fingers to zoom around the point between them
+- one finger drag to pan, and double tap to zoom 2x
+- tooltips pinned to the map, since a tap leaves no cursor to follow
+
+Touch gestures work the way they do in a map app: the pinch keeps whatever is
+between your fingers under them while it zooms, and lifting one finger hands
+the pan over to the one still down. While `zoomable` is on the map sets
+`touch-action: none`, so a drag that starts on it pans the map rather than
+scrolling the page.
 
 Province strokes and marker sizes stay constant on screen at any zoom, and the
 map is clamped so panning can never expose empty space, so zooming back out to

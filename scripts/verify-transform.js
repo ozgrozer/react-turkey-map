@@ -71,6 +71,7 @@ const verify = async () => {
     applyTransform,
     wheelZoomFactor,
     identityTransform,
+    unapplyTransform,
     interpolateTransform
   } = await import(path.join(srcDir, 'transform.js'))
 
@@ -95,7 +96,34 @@ const verify = async () => {
     `İstanbul at ${marker.x.toFixed(1)},${marker.y.toFixed(1)}`
   )
 
-  // 1. wheel zoom around the cursor
+  // 1. unapplyTransform undoes applyTransform, which is what pins a tapped
+  // tooltip to the map: the tap is turned into a map point and back again
+  // every frame of a pan or a zoom
+  let roundTripDrift = 0
+  for (const state of [
+    identityTransform,
+    { zoom: 3.7, x: -812.4, y: -319.9 },
+    { zoom: 40, x: -viewBoxWidth * 39, y: -viewBoxHeight * 39 }
+  ]) {
+    for (const spot of [
+      { x: 0, y: 0 },
+      { x: 500, y: 220 },
+      { x: viewBoxWidth, y: viewBoxHeight }
+    ]) {
+      const back = applyTransform(unapplyTransform(spot, state), state)
+      roundTripDrift = Math.max(
+        roundTripDrift,
+        Math.hypot(back.x - spot.x, back.y - spot.y)
+      )
+    }
+  }
+  check(
+    'a point survives the trip to map units and back',
+    roundTripDrift < 1e-6,
+    `drift ${roundTripDrift.toExponential(1)}`
+  )
+
+  // 2. wheel zoom around the cursor
   const cursor = { x: 500, y: 220 }
   let current = identityTransform
   let cursorDrift = 0
@@ -115,13 +143,7 @@ const verify = async () => {
       next.zoom > minZoom + epsilon &&
       next.zoom < maxZoom - epsilon
     ) {
-      const after = applyTransform(
-        {
-          x: (cursor.x - current.x) / current.zoom,
-          y: (cursor.y - current.y) / current.zoom
-        },
-        next
-      )
+      const after = applyTransform(unapplyTransform(cursor, current), next)
       cursorDrift = Math.max(
         cursorDrift,
         Math.hypot(after.x - cursor.x, after.y - cursor.y)
@@ -137,13 +159,10 @@ const verify = async () => {
   )
   check('wheel zoom keeps the drawing covering the frame', covers(current))
 
-  // 2. double click zoom, and the frames its animation walks through
+  // 3. double click zoom, and the frames its animation walks through
   const start = current
   const target = zoomAround(cursor, start.zoom * 2, start, minZoom, maxZoom)
-  const beforeDouble = {
-    x: (cursor.x - start.x) / start.zoom,
-    y: (cursor.y - start.y) / start.zoom
-  }
+  const beforeDouble = unapplyTransform(cursor, start)
   const afterDouble = applyTransform(beforeDouble, target)
   check(
     'double click zoom holds the point under the cursor still',
@@ -167,7 +186,7 @@ const verify = async () => {
       JSON.stringify(target)
   )
 
-  // 3. dragging pans by exactly the pointer delta
+  // 4. dragging pans by exactly the pointer delta
   const dragged = panBy(target, -40, -25, minZoom, maxZoom)
   check(
     'dragging pans by the pointer delta',
@@ -182,7 +201,7 @@ const verify = async () => {
     overDragged.x === 0 && overDragged.y === 0 && covers(overDragged)
   )
 
-  // 4. zooming back out is the only way home now that there is no reset control
+  // 5. zooming back out is the only way home now that there is no reset control
   const zoomedOut = zoomAround(
     { x: 12, y: 400 },
     minZoom,
@@ -196,7 +215,7 @@ const verify = async () => {
     `from ${dragged.zoom.toFixed(2)}x at ${dragged.x.toFixed(0)},${dragged.y.toFixed(0)}`
   )
 
-  // 5. zoom limits over a long random walk, and 6. marker pinning throughout
+  // 6. zoom limits over a long random walk, and 7. marker pinning throughout
   const random = lcg(20240828)
   let walk = identityTransform
   let uncovered = 0

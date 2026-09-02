@@ -17,6 +17,7 @@ import {
   zoomAround,
   wheelZoomFactor,
   identityTransform,
+  unapplyTransform,
   interpolateTransform
 } from './transform'
 
@@ -24,6 +25,16 @@ import {
 const dragThreshold = 3
 const doubleClickZoom = 2
 const doubleClickDuration = 250
+// two fingers this close report a midpoint and a ratio that are mostly noise
+const minPinchDistance = 1
+// a touch double tap has to be recognised by hand, since a browser that has
+// had its own double tap zoom taken away by touch-action does not always
+// follow up with a dblclick
+const doubleTapDelay = 300
+// screen pixels between two taps for them to still count as a double tap
+const doubleTapDistance = 30
+// long enough to cover the dblclick that may follow a double tap we handled
+const syntheticClickWindow = 500
 // how quickly the rendered zoom chases the one the wheel has asked for; small
 // enough to feel immediate, large enough to swallow a jittery first delta
 const zoomTimeConstant = 70
@@ -38,6 +49,35 @@ const maxFrameGap = 100
 const markerRadius = 5
 const markerStrokeWidth = 1.5
 const defaultMarkerColor = '#e2231a'
+
+// the two fingers of a pinch: how far apart they are in screen pixels, and
+// where their midpoint sits, which is the point the map has to hold still.
+// only the first two pointers count, so a third finger changes nothing
+const readPinch = (pointers, toPoint) => {
+  const [a, b] = Array.from(pointers.values())
+  return {
+    distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+    point: toPoint({
+      clientX: (a.clientX + b.clientX) / 2,
+      clientY: (a.clientY + b.clientY) / 2
+    })
+  }
+}
+
+// where a point of the map lands over the wrapper, as a percentage, or null
+// once it has been carried outside the viewBox. html positioned this way keeps
+// a constant screen size while still riding the pan and zoom
+const anchorPosition = (point, transform) => {
+  const x = point.x * transform.zoom + transform.x
+  const y = point.y * transform.zoom + transform.y
+  // the svg clips its contents at the edge, so anything anchored to them goes
+  // at the same moment
+  if (x < 0 || x > viewBoxWidth || y < 0 || y > viewBoxHeight) return null
+  return {
+    left: `${(x / viewBoxWidth) * 100}%`,
+    top: `${(y / viewBoxHeight) * 100}%`
+  }
+}
 
 // treats a missing value as unplaceable rather than as 0
 const toNumber = value => {
@@ -83,6 +123,9 @@ export default ({
 
   const [tooltip, setTooltip] = useState('')
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  // where a tapped tooltip is pinned, in map units. a hovered one has no
+  // anchor: it follows the pointer instead, which is already where it belongs
+  const [tooltipAnchor, setTooltipAnchor] = useState(null)
   const [transform, setTransform] = useState(identityTransform)
   const [dragging, setDragging] = useState(false)
   // { marker, point } for the marker whose popup is open, in map units
@@ -100,6 +143,17 @@ export default ({
   // transform eases towards rather than snapping to
   const wheelRef = useRef(null)
   const zoomFrameRef = useRef(null)
+  // every finger currently down, keyed by pointerId, in client coordinates
+  const pointersRef = useRef(new Map())
+  // { distance, point } from the last move, so a pinch applies the change
+  // since the previous frame rather than since the gesture began
+  const pinchRef = useRef(null)
+  const lastTapRef = useRef(null)
+  const touchZoomAtRef = useRef(0)
+  // a tap has no pointer to follow afterwards, so its tooltip has to be
+  // anchored to the map instead. the synthetic mouseover that opens it does
+  // not say where it came from, so the pointer event before it is recorded
+  const touchInputRef = useRef(false)
 
   // the ref mirrors the state so back to back wheel events compose correctly
   const commitTransform = useCallback(next => {
@@ -229,12 +283,75 @@ export default ({
     return () => svg.removeEventListener('wheel', handleWheel)
   }, [zoomable, minZoom, maxZoom, getPoint, cancelAnimation, runZoomLoop])
 
+  // screen pixels to viewBox units, read fresh so a map that has been resized
+  // mid gesture still pans by the right amount
+  const readScale = useCallback(() => {
+    const rect = svgRef.current.getBoundingClientRect()
+    return {
+      scaleX: viewBoxWidth / rect.width,
+      scaleY: viewBoxHeight / rect.height
+    }
+  }, [])
+
+  // takes over panning with whichever finger is still down, so lifting one
+  // finger out of a pinch leaves the map under the other one rather than
+  // ending the gesture
+  const startDrag = useCallback(
+    (pointerId, pointer, moved) => {
+      dragRef.current = {
+        moved,
+        pointerId,
+        pointerX: pointer.clientX,
+        pointerY: pointer.clientY,
+        origin: transformRef.current,
+        ...readScale()
+      }
+    },
+    [readScale]
+  )
+
   useEffect(() => {
     if (!dragging) return
 
     const handlePointerMove = event => {
+      const pointers = pointersRef.current
+      // a pointer that was never pressed on the map must not move it
+      if (!pointers.has(event.pointerId)) return
+      pointers.set(event.pointerId, {
+        clientX: event.clientX,
+        clientY: event.clientY
+      })
+
+      const pinch = pinchRef.current
+      if (pinch && pointers.size >= 2) {
+        const next = readPinch(pointers, getPoint)
+        if (next.distance < minPinchDistance) return
+        // the midpoint carries the pan and the spread carries the zoom, so
+        // the two fingers keep whatever they grabbed under themselves
+        const panned = panBy(
+          transformRef.current,
+          next.point.x - pinch.point.x,
+          next.point.y - pinch.point.y,
+          minZoom,
+          maxZoom
+        )
+        commitTransform(
+          zoomAround(
+            next.point,
+            (panned.zoom * next.distance) / pinch.distance,
+            panned,
+            minZoom,
+            maxZoom
+          )
+        )
+        // applied per frame rather than from the start of the gesture, so
+        // clamping at an edge cannot make the fingers drift off the map
+        pinchRef.current = next
+        return
+      }
+
       const drag = dragRef.current
-      if (!drag) return
+      if (!drag || drag.pointerId !== event.pointerId) return
       if (!drag.moved) {
         const dx = event.clientX - drag.pointerX
         const dy = event.clientY - drag.pointerY
@@ -257,12 +374,83 @@ export default ({
       )
     }
 
-    const handlePointerUp = () => {
+    // a tap that neither panned nor pinched, so it can start or finish a
+    // double tap
+    const handleTap = event => {
+      const now = window.performance.now()
+      const last = lastTapRef.current
+      const gap = last
+        ? Math.hypot(event.clientX - last.clientX, event.clientY - last.clientY)
+        : Infinity
+      const near =
+        last && now - last.at < doubleTapDelay && gap <= doubleTapDistance
+
+      if (!near) {
+        lastTapRef.current = {
+          at: now,
+          clientX: event.clientX,
+          clientY: event.clientY
+        }
+        return
+      }
+
+      lastTapRef.current = null
+      // a browser that also emits a dblclick for this tap would otherwise
+      // zoom a second time
+      touchZoomAtRef.current = now
+      // the second tap is part of the zoom, not a click on what is under it
+      clickSuppressedRef.current = true
+      const current = transformRef.current
+      animateTo(
+        zoomAround(
+          getPoint(event),
+          current.zoom * doubleClickZoom,
+          current,
+          minZoom,
+          maxZoom
+        )
+      )
+    }
+
+    const handlePointerUp = event => {
+      const pointers = pointersRef.current
+      if (!pointers.delete(event.pointerId)) return
+
+      if (pinchRef.current) {
+        if (pointers.size >= 2) {
+          // a third finger lifting leaves two others still pinching, from
+          // wherever they are now
+          pinchRef.current = readPinch(pointers, getPoint)
+          return
+        }
+        pinchRef.current = null
+        // a pinch is never a click on whatever it happened to start on
+        clickSuppressedRef.current = true
+        lastTapRef.current = null
+        const [remaining] = Array.from(pointers.entries())
+        if (remaining) startDrag(remaining[0], remaining[1], true)
+        else setDragging(false)
+        return
+      }
+
       const drag = dragRef.current
+      const moved = Boolean(drag && drag.moved)
       // a drag that ends on a marker must not count as a click on it
-      clickSuppressedRef.current = Boolean(drag && drag.moved)
-      dragRef.current = null
-      setDragging(false)
+      clickSuppressedRef.current = moved
+      if (drag && drag.pointerId === event.pointerId) dragRef.current = null
+
+      if (event.pointerType === 'touch' && event.type === 'pointerup') {
+        if (moved) lastTapRef.current = null
+        else handleTap(event)
+      }
+
+      if (pointers.size === 0) setDragging(false)
+      // whatever is still down carries on, in case the first finger of a
+      // pinch was the one that lifted before the second was recognised
+      else if (!dragRef.current) {
+        const [remaining] = Array.from(pointers.entries())
+        startDrag(remaining[0], remaining[1], true)
+      }
     }
 
     // tracked on window rather than through setPointerCapture on the svg:
@@ -276,7 +464,15 @@ export default ({
       window.removeEventListener('pointerup', handlePointerUp)
       window.removeEventListener('pointercancel', handlePointerUp)
     }
-  }, [dragging, minZoom, maxZoom, commitTransform])
+  }, [
+    dragging,
+    minZoom,
+    maxZoom,
+    getPoint,
+    startDrag,
+    animateTo,
+    commitTransform
+  ])
 
   useEffect(() => {
     const svg = svgRef.current
@@ -311,26 +507,45 @@ export default ({
   }, [cancelAnimation, cancelZoom])
 
   const handlePointerDown = event => {
+    touchInputRef.current = event.pointerType === 'touch'
     if (!zoomable || event.button !== 0) return
-    const rect = svgRef.current.getBoundingClientRect()
     cancelAnimation()
     // a drag must not fight a zoom that is still easing towards its target
     cancelZoom()
     clickSuppressedRef.current = false
-    dragRef.current = {
-      moved: false,
-      pointerX: event.clientX,
-      pointerY: event.clientY,
-      origin: transformRef.current,
-      // screen pixels to viewBox units
-      scaleX: viewBoxWidth / rect.width,
-      scaleY: viewBoxHeight / rect.height
+
+    const pointers = pointersRef.current
+    // the primary pointer is the first finger of a gesture, so anything still
+    // tracked here is a pointerup that never arrived. without this the map
+    // stays stuck in a pinch it can never leave, and every later tap counts
+    // as a second finger
+    if (event.isPrimary) {
+      pointers.clear()
+      pinchRef.current = null
     }
+    pointers.set(event.pointerId, {
+      clientX: event.clientX,
+      clientY: event.clientY
+    })
+
+    if (pointers.size >= 2) {
+      // the second finger turns whatever was a drag into a pinch
+      dragRef.current = null
+      lastTapRef.current = null
+      pinchRef.current = readPinch(pointers, getPoint)
+    } else {
+      startDrag(event.pointerId, event, false)
+    }
+
     setDragging(true)
   }
 
   const handleDoubleClick = event => {
     if (!zoomable) return
+    // a double tap we already zoomed for; some browsers follow it with a
+    // dblclick as well, which would double the zoom again
+    const since = window.performance.now() - touchZoomAtRef.current
+    if (since < syntheticClickWindow) return
     const current = transformRef.current
     animateTo(
       zoomAround(
@@ -346,48 +561,81 @@ export default ({
   // client rather than page coordinates, because the tooltip is fixed to the
   // viewport
   const trackPointer = event => {
+    // an anchored tooltip is pinned to the map, so it must not be dragged
+    // along by the synthetic mousemove a tap leaves behind
+    if (touchInputRef.current) return
     setPosition({ top: event.clientY + 25, left: event.clientX })
   }
 
-  const handleMouseOver = event => {
-    const target = event.target
-    // mouseover lands before the first mousemove, so without this the
-    // tooltip would appear for a frame wherever the pointer last was
-    trackPointer(event)
-
+  // what the thing under the pointer has to say, or null for nothing to show
+  const tooltipFor = target => {
     if (target.tagName === 'circle') {
       const title = showMarkerTooltip
         ? target.getAttribute('data-marker-title')
         : null
-      setTooltip(title ? <div css={styles.tooltipContent}>{title}</div> : '')
-      return
+      return title ? <div css={styles.tooltipContent}>{title}</div> : null
     }
 
-    if (target.tagName === 'path') {
-      if (!showCityTooltip) {
-        setTooltip('')
-        return
-      }
+    if (target.tagName === 'path' && showCityTooltip) {
       const city = target.parentNode.getAttribute('data-city')
       const plate = target.parentNode.getAttribute('data-plate')
-      const TooltipComponent = (
+      return (
         <div css={styles.tooltipContent}>
           {city}
           {tooltipData[plate] ? `: ${tooltipData[plate]}` : ''}
         </div>
       )
-      setTooltip(TooltipComponent)
     }
+
+    return null
+  }
+
+  const hideTooltip = () => {
+    setTooltip('')
+    setTooltipAnchor(null)
+  }
+
+  const handleMouseOver = event => {
+    // a tap leaves synthetic mouse events behind, and the hover they imply
+    // then lingers on whatever was tapped. the tap opens its own tooltip, so
+    // these are noise
+    if (touchInputRef.current) return
+
+    const tag = event.target.tagName
+    if (tag !== 'circle' && tag !== 'path') return
+    // mouseover lands before the first mousemove, so without this the
+    // tooltip would appear for a frame wherever the pointer last was
+    trackPointer(event)
+    setTooltipAnchor(null)
+    setTooltip(tooltipFor(event.target) || '')
   }
 
   const handleMouseOut = () => {
-    setTooltip('')
+    // the browser moves that lingering hover off the tapped city on its own
+    // as the map slides under it, which would close a tooltip nobody dismissed
+    if (touchInputRef.current) return
+    hideTooltip()
+  }
+
+  // a tap has no pointer left to follow afterwards, so its tooltip is pinned
+  // to the map instead and rides the pan and zoom with the city it names
+  const showTapTooltip = event => {
+    const content = tooltipFor(event.target)
+    if (!content) {
+      hideTooltip()
+      return
+    }
+    setTooltip(content)
+    setTooltipAnchor(unapplyTransform(getPoint(event), transformRef.current))
   }
 
   const handleClick = event => {
     if (clickSuppressedRef.current) return
     // any click that isn't on a marker dismisses the popup
     setPopup(null)
+    // opens the tooltip on a city, and closes it again on a tap into the sea.
+    // a pan or a pinch never gets here, so neither disturbs it
+    if (touchInputRef.current) showTapTooltip(event)
     if (!clickableCities) return
     if (event.target.tagName === 'path') {
       const parent = event.target.parentNode
@@ -405,6 +653,9 @@ export default ({
   const handleMarkerClick = (event, marker, longitude, latitude) => {
     event.stopPropagation()
     if (clickSuppressedRef.current) return
+    // the click never reaches the svg, so the marker has to place its own
+    // tooltip the way a province does
+    if (touchInputRef.current) showTapTooltip(event)
     // both null for a marker that falls outside every province
     const { plate = null, city = null } =
       findProvince(longitude, latitude) || {}
@@ -419,17 +670,11 @@ export default ({
   // the popup is html over the map rather than inside the svg, so it keeps a
   // constant screen size; the position is a percentage of the viewBox, which
   // the wrapper matches exactly
-  const popupPosition = (() => {
-    if (!popup || !renderMarkerPopup) return null
-    const x = popup.point.x * transform.zoom + transform.x
-    const y = popup.point.y * transform.zoom + transform.y
-    // the svg clips the marker at the edge, so the popup has to go too
-    if (x < 0 || x > viewBoxWidth || y < 0 || y > viewBoxHeight) return null
-    return {
-      left: `${(x / viewBoxWidth) * 100}%`,
-      top: `${(y / viewBoxHeight) * 100}%`
-    }
-  })()
+  const popupPosition =
+    popup && renderMarkerPopup ? anchorPosition(popup.point, transform) : null
+
+  const anchoredTooltipPosition =
+    tooltip && tooltipAnchor ? anchorPosition(tooltipAnchor, transform) : null
 
   const markerElements = markers
     .map((marker, key) => {
@@ -465,9 +710,11 @@ export default ({
     .filter(Boolean)
 
   // on the body rather than inside the map, so a host that hasn't made its
-  // own wrapper a containing block still gets the tooltip under the pointer
+  // own wrapper a containing block still gets the tooltip under the pointer.
+  // an anchored tooltip goes in the wrapper instead, where the transform can
+  // reach it
   const tooltipElement =
-    tooltip && typeof document !== 'undefined'
+    tooltip && !tooltipAnchor && typeof document !== 'undefined'
       ? createPortal(
           <div
             css={styles.tooltipCss}
@@ -495,7 +742,7 @@ export default ({
             zoomable && styles.zoomableMap,
             dragging && styles.draggingMap
           ]}
-          {...(zoomable ? { onPointerDown: handlePointerDown } : {})}
+          onPointerDown={handlePointerDown}
           {...(zoomable ? { onDoubleClick: handleDoubleClick } : {})}
           {...(anyTooltip ? { onMouseOut: handleMouseOut } : {})}
           {...(anyTooltip ? { onMouseOver: handleMouseOver } : {})}
@@ -534,6 +781,12 @@ export default ({
             {markerElements}
           </g>
         </svg>
+
+        {anchoredTooltipPosition ? (
+          <div css={styles.anchoredTooltip} style={anchoredTooltipPosition}>
+            {tooltip}
+          </div>
+        ) : null}
 
         {popupPosition ? (
           <div

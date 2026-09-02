@@ -13,8 +13,13 @@ export default {
     display: block;
   `,
   zoomableMap: css`
+    /* the map handles its own pan and zoom, so the browser must not also
+       scroll the page or run its own double tap zoom on top */
     touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
+    /* stops ios flashing a grey box over a province on every tap */
+    -webkit-tap-highlight-color: transparent;
     cursor: grab;
   `,
   draggingMap: css`
@@ -45,6 +50,18 @@ export default {
     stroke: #fff;
     cursor: pointer;
     vector-effect: non-scaling-stroke;
+  `,
+  anchoredTooltip: css`
+    z-index: 2;
+    position: absolute;
+    /* centred over the point that was tapped and lifted clear of the finger,
+       which would otherwise be covering it */
+    transform: translate(-50%, calc(-100% - 12px));
+    /* it belongs to what is under it, so it must never take the next tap */
+    pointer-events: none;
+    /* the map is only as wide as the screen on a phone, so a long name has to
+       be allowed to wrap rather than run off the edge */
+    max-width: 80%;
   `,
   markerPopup: css`
     position: absolute;

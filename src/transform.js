@@ -41,6 +41,13 @@ export const applyTransform = (point, { zoom, x, y }) => ({
   y: point.y * zoom + y
 })
 
+// the inverse: which point of the map is sitting at this spot in the viewBox,
+// so a tap can be pinned to the map rather than to the screen
+export const unapplyTransform = (point, { zoom, x, y }) => ({
+  x: (point.x - x) / zoom,
+  y: (point.y - y) / zoom
+})
+
 export const interpolateTransform = (start, target, progress) => ({
   zoom: start.zoom + (target.zoom - start.zoom) * progress,
   x: start.x + (target.x - start.x) * progress,
